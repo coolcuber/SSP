@@ -1,6 +1,5 @@
 #ifndef SSP_H
 #define SSP_H
-#endif
 
 #ifndef MATH_H
 #include <math.h>
@@ -18,6 +17,8 @@
 #ifndef STRUCTURES_H
 #include "structures.h"
 #endif
+
+#define PRECISION 0.01
 
 struct DemandZone;
 struct ServiceZone;
@@ -48,11 +49,17 @@ struct SSP {
 	ServiceZone sz;
 };
 
-DemandZone* newDZ(float x, float y, float w, float h, float v);
-SSP* newSSP();
-ServiceZone* newSZ(float x, float y, float w, float h);
-void setup(SSP *ssp, PointListLinked *yi, PointListLinked *l, IndMap *ix, IndMap *ox);
-float getReward(ServiceZone *sz, DemandZone *dz);
-float getTotalReward(SSP *ssp);
-ServiceZone* solveSSP(SSP *ssp);
-void readSSP(SSP *ssp, FILE *fp);
+int floatequals(float f1, float f2);
+DemandZone* newdz(float x, float y, float w, float h, float v);
+SSP* newssp();
+void makedzs(SSP *ssp, size_t size);
+void sspfree(SSP *ssp);
+ServiceZone* newsz(float x, float y, float w, float h);
+int szequals(ServiceZone *sz1, ServiceZone *sz2);
+void setup(SSP *ssp, PointList *yi, PointList *l, IndexMap *ix, IndexMap *ox);
+float reward(ServiceZone *sz, DemandZone *dz);
+float totalreward(SSP *ssp);
+float solvessp(SSP *ssp);
+void readssp(SSP *ssp, FILE *fp);
+
+#endif

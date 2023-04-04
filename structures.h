@@ -7,43 +7,35 @@
 #endif
 
 struct ILL_List;
-struct IndListLinked;
-struct IndListNode;
-struct IndMapping;
+struct IndexListNode;
+struct IndexMapping;
 struct PointList;
-struct PointListLinked;
 struct PointListNode;
 
 typedef struct ILL_ListNode ILL_ListNode;
-typedef struct IndListNode IndListNode;
-typedef struct IndMapping IndMapping;
-typedef struct PointList PointList;
+typedef struct IndexListNode IndexListNode;
+typedef struct IndexMapping IndexMapping;
 typedef struct PointListNode PointListNode;
 
 typedef ILL_ListNode* ILL_List;
-typedef IndListNode* IndListLinked;
-typedef IndMapping* IndMap;
-typedef PointListNode* PointListLinked;
+typedef IndexListNode* IndexList;
+typedef IndexMapping* IndexMap;
+typedef PointListNode* PointList;
 
 struct ILL_ListNode {
-	IndListLinked value;
-	IndListLinked *next;
+	IndexList value;
+	IndexList *next;
 };
 
-struct IndListNode {
+struct IndexListNode {
 	unsigned int value;
-	IndListNode *next;
+	IndexListNode *next;
 };
 
-struct IndMapping {
+struct IndexMapping {
 	float point;
-	IndListLinked inds;
-	IndMapping *next;
-};
-
-struct PointList {
-	int size;
-	float *values;
+	IndexList inds;
+	IndexMapping *next;
 };
 
 struct PointListNode {
@@ -51,18 +43,16 @@ struct PointListNode {
 	PointListNode *next;
 };
 
-IndListNode* addValueToILL(IndListLinked *ill, int value);
-IndMapping* addValueToMap(IndMap *map, float point, int ind);
-PointListNode* addValueToPLL(PointListLinked *pll, float value);
-IndMap* emptyIndMap();
-PointListLinked* emptyPLL();
-IndListLinked evaluate(IndMap *map, float in);
-void freeILL(IndListLinked *ill);
-void freeIndMap(IndMap *map);
-void freePLL(PointListLinked *pll);
-IndListLinked* newILL(int value);
-IndListNode* newILN(int value);
-PointList* linkedToRegular(PointListLinked *pll);
-PointListLinked* newPLL(float value);
+IndexListNode* iladd(IndexList *ill, int value);
+IndexMapping* imadd(IndexMap *map, float point, int ind);
+PointListNode* pladd(PointList *pll, float value);
+IndexMap* newim();
+PointList* newpl();
+IndexList evaluate(IndexMap *map, float in);
+void ilfree(IndexList *ill);
+void imfree(IndexMap *map);
+void plfree(PointList *pll);
+IndexList* newil(int value);
+IndexListNode* newILN(int value);
+PointList* newPLL(float value);
 PointListNode* newPLN(float value);
-PointList* newPointList(int size);

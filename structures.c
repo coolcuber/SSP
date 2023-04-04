@@ -2,8 +2,8 @@
 #include "structures.h"
 #endif
 
-PointListLinked* newPLL(float value) {
-	PointListLinked *pll = (PointListLinked*) calloc(1, sizeof(PointListLinked));
+PointList* newPLL(float value) {
+	PointList *pll = (PointList*) calloc(1, sizeof(PointList));
 	*pll = newPLN(value);
 	return pll;
 }
@@ -17,7 +17,7 @@ PointListNode* newPLN(float value) {
 /**
  * Add a value to a sorted list.  Returns a pointer to the node added
  */
-PointListNode* addValueToPLL(PointListLinked *pll, float value) {
+PointListNode* pladd(PointList *pll, float value) {
 	PointListNode *node = newPLN(value), *cur = *pll, *last = cur;
 	if (cur == NULL) {
 		*pll = node;
@@ -53,7 +53,7 @@ PointListNode* addValueToPLL(PointListLinked *pll, float value) {
 	}
 }
 
-void freePLL(PointListLinked *pll) {
+void plfree(PointList *pll) {
 	PointListNode *node = *pll, *last = NULL;
 	while (node != NULL) {
 		last = node;
@@ -63,29 +63,8 @@ void freePLL(PointListLinked *pll) {
 	free(pll);
 }
 
-PointList* linkedToRegular(PointListLinked *pll) {
-	PointListNode *cur = *pll;
-	int size = 0;
-	while (cur != NULL) {
-		size += 1;
-		cur = cur->next;
-	}
-	cur = *pll;
-	PointList *pl = (PointList*) calloc(1, sizeof(PointList));
-	pl->size = size;
-	pl->values = (float*) calloc(size, sizeof(float));
-	int i = 0;
-	while (cur != NULL) {
-		pl->values[i] = cur->value;
-		i += 1;
-		cur = cur->next;
-	}
-	freePLL(pll);
-	return pl;
-}
-
-IndListLinked evaluate(IndMap *map, float point) {
-	IndMapping *cur = *map;
+IndexList evaluate(IndexMap *map, float point) {
+	IndexMapping *cur = *map;
 	while (cur != NULL) {
 		if (cur->point == point) {
 			return cur->inds;
@@ -95,14 +74,14 @@ IndListLinked evaluate(IndMap *map, float point) {
 	return NULL;
 }
 
-IndListLinked* newILL(int value) {
-	IndListLinked *ill = (IndListLinked*) calloc(1, sizeof(IndListLinked));
+IndexList* newil(int value) {
+	IndexList *ill = (IndexList*) calloc(1, sizeof(IndexList));
 	*ill = newILN(value);
 	return ill;
 }
 
-IndListNode* newILN(int value) {
-	IndListNode *iln = (IndListNode*) calloc(1, sizeof(IndListNode));
+IndexListNode* newILN(int value) {
+	IndexListNode *iln = (IndexListNode*) calloc(1, sizeof(IndexListNode));
 	iln->value = value;
 	return iln;
 }
@@ -110,8 +89,8 @@ IndListNode* newILN(int value) {
 /**
  * Add a value to a sorted list.  Returns a pointer to the node added
  */
-IndListNode* addValueToILL(IndListLinked *ill, int value) {
-	IndListNode *node = newILN(value), *cur = *ill, *last = cur;
+IndexListNode* iladd(IndexList *ill, int value) {
+	IndexListNode *node = newILN(value), *cur = *ill, *last = cur;
 	if (cur == NULL) {
 		*ill = node;
 		return node;
@@ -146,8 +125,8 @@ IndListNode* addValueToILL(IndListLinked *ill, int value) {
 	}
 }
 
-void freeILL(IndListLinked *ill) {
-	IndListNode *node = *ill, *last = NULL;
+void ilfree(IndexList *ill) {
+	IndexListNode *node = *ill, *last = NULL;
 	while (node != NULL) {
 		last = node;
 		node = node->next;
@@ -156,31 +135,31 @@ void freeILL(IndListLinked *ill) {
 	free(ill);
 }
 
-PointListLinked* emptyPLL() {
-	PointListLinked *pll = (PointListLinked*) calloc(1, sizeof(PointListLinked));
+PointList* newpl() {
+	PointList *pll = (PointList*) calloc(1, sizeof(PointList));
 }
 
-IndListLinked* emptyILL() {
-	IndListLinked* pll = (IndListLinked*) calloc(1, sizeof(IndListLinked));
+IndexList* emptyILL() {
+	IndexList* pll = (IndexList*) calloc(1, sizeof(IndexList));
 }
 
-IndMapping* newIndMapping(float point, int ind) {
-	IndMapping *mapping = (IndMapping*) calloc(1, sizeof(IndMapping));
+IndexMapping* newIndexMapping(float point, int ind) {
+	IndexMapping *mapping = (IndexMapping*) calloc(1, sizeof(IndexMapping));
 	mapping->point = point;
-	mapping->inds = *newILL(ind);
+	mapping->inds = *newil(ind);
 	return mapping;
 }
 
-IndMap* emptyIndMap() {
-	IndMap* map = (IndMap*) calloc(1, sizeof(IndMap));
+IndexMap* newim() {
+	IndexMap* map = (IndexMap*) calloc(1, sizeof(IndexMap));
 }
 
-void addToIntMapping(IndMapping *mapping, int ind) {
-	addValueToILL(&(mapping->inds), ind);
+void addToIntMapping(IndexMapping *mapping, int ind) {
+	iladd(&(mapping->inds), ind);
 }
 
-void freeIndMap(IndMap *map) {
-	IndMapping *node = *map, *last = NULL;
+void imfree(IndexMap *map) {
+	IndexMapping *node = *map, *last = NULL;
 	while (node != NULL) {
 		last = node;
 		node = node->next;
@@ -192,8 +171,8 @@ void freeIndMap(IndMap *map) {
 /**
  * Add a value to a sorted list.  Returns a pointer to the node added
  */
-IndMapping* addValueToMap(IndMap *map, float point, int ind) {
-	IndMapping *mapping = newIndMapping(point, ind), *cur = *map, *last = NULL;
+IndexMapping* imadd(IndexMap *map, float point, int ind) {
+	IndexMapping *mapping = newIndexMapping(point, ind), *cur = *map, *last = NULL;
 	while (cur != NULL && cur->point < point) {
 		last = cur;
 		cur = cur->next;
@@ -209,7 +188,7 @@ IndMapping* addValueToMap(IndMap *map, float point, int ind) {
 	}
 	else if (cur->point == point) {
 		// The value is equal to the current value
-		addValueToILL(&(cur->inds), ind);
+		iladd(&(cur->inds), ind);
 		return cur;
 	}
 	else {
