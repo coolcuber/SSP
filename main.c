@@ -2,182 +2,184 @@
 #include "ssp.h"
 #endif
 
-/**
- * Check if two floats are equal (up to PRECISION)
- */
-int floatequals(float f1, float f2) {
-	return fabs(f1 - f2) < PRECISION;
+#define TAB_LEN 8
+
+void printDZ(DemandZone *dz) {
+	printf("DZ: x = %f, y = %f, w = %f, h = %f, v = %f\n", dz->x, dz->y, dz->w, dz->h, dz->v);
+}
+
+void printSZ(ServiceZone *sz) {
+	printf("SZ: x = %f, y = %f, w = %f, h = %f\n", sz->x, sz->y, sz->w, sz->h);
 }
 
 /**
- * Check if a float is positive (up to PRECISION)
+ *
+ * Internal functions for file reading.
+ * These are trown together without regard for security, so don't use these in
+ * an application!
+ *
  */
-int floatpos(float f) {
-	if (f > 0) {
-		return 1;
+
+/**
+ * Get the next line in a file without moving the filestream position.
+ * Returns a string of the characters until either the first newline
+ * (not including the first character) or EOF is reached.
+ */
+int nextLine(FILE *fp, char *str) {
+	memset(str, '\0', 50);
+	int pos = ftell(fp), i = 0;
+	char c = fgetc(fp);
+	do {
+		str[i] = c;
+		c = fgetc(fp);
+		i += 1;
+	} while (c != '\n' && i < 50);
+	fseek(fp, pos, SEEK_SET);
+	return pos;
+}
+
+/**
+ * Create the string indicating the position of the error. Assumes errStr
+ * is blank.
+ */
+void makeErrorString(char *errStr, char *str, int errPos) {
+	int newLine = 0, tab = 0;
+	if (errPos >= 50) {
+		exit(-1);
 	}
-	return f > -PRECISION;
-}
-
-/**
- * Returns a pointer to a new DZ with specified properties
- */
-DemandZone* newdz(float x, float y, float w, float h, float v) {
-	DemandZone *dz = (DemandZone*) malloc(sizeof(DemandZone));
-	dz->x = x;
-	dz->y = y;
-	dz->w = w;
-	dz->h = h;
-	dz->v = v;
-	return dz;
-}
-
-/**
- * Returns a pointer to a new (empty) SSP
- */
-SSP* newssp() {
-	SSP *ssp = (SSP*) calloc(1, sizeof(SSP));
-	return ssp;
-}
-
-/**
- * Initialize the dynamic array of DZs in the SSP
- */
-void makedzs(SSP *ssp, size_t size) {
-	ssp->zones = size;
-	ssp->dzs = (DemandZone*) calloc(size, sizeof(DemandZone));
-}
-
-/**
- * Deallocate an SSP and the associated list of DZs
- */
-void sspfree(SSP *ssp) {
-	free(ssp->dzs);
-	free(ssp);
-}
-
-/**
- * Returns a pointer to a new SZ with specified properties
- */
-ServiceZone* newsz(float x, float y, float w, float h) {
-	ServiceZone *sz = (ServiceZone*) malloc(sizeof(ServiceZone));
-	sz->x = x;
-	sz->y = y;
-	sz->w = w;
-	sz->h = h;
-	return sz;
-}
-
-/**
- * Check that two SZs are equivalent
- */
-int szequals(ServiceZone *sz1, ServiceZone *sz2) {
-	return floatequals(sz1->x, sz2->x) && floatequals(sz1->y, sz2->y) && floatequals(sz1->w, sz2->w) && floatequals(sz1->h, sz2->h);
-}
-
-/**
- * Set the SSP up to be solved by calculating the list of inner y-points,
- * the list of x points, a map which maps a point to associated indices of a
- * DZ for which it is an inner point, and a map which maps a point to the
- * associated indices of the DZs for which it is an outer point
- */
-void setup(SSP *ssp, PointList *yi, PointList *l, IndexMap *ix, IndexMap *ox) {
-	float ws = ssp->sz.w, hs = ssp->sz.h, wd, xd;
-	PointListNode *cur = NULL;
-	IndexMapping *mapping = NULL;
-	for (int i = 0; i < ssp->zones; i++) {
-		// Add the interior y-values
-		pladd(yi, ssp->dzs[i].y);
-		pladd(yi, ssp->dzs[i].y + ssp->dzs[i].h - hs);
-		cur = *l;
-		// Add the interior and exterior x-values
-		xd = ssp->dzs[i].x;
-		wd = ssp->dzs[i].w;
-		pladd(l, xd - ws);
-		pladd(l, xd);
-		cur = pladd(l, xd + wd - ws);
-		pladd(l, xd + wd);
-		// Add to interior mapping
-		imadd(ix, ssp->dzs[i].x, i);
-		imadd(ix, ssp->dzs[i].x + ssp->dzs[i].w - ws, i);
-		// Add to exterior mapping
-		imadd(ox, ssp->dzs[i].x - ws, i);
-		imadd(ox, ssp->dzs[i].x + ssp->dzs[i].w, i);
+	if (str[0] == '\n') {
+		newLine = 1;
 	}
-}
-
-/**
- * Calculate the total reward recieved by the SZ in a given SSP
- */
-float totalreward(SSP *ssp) {
-	float t = 0;
-	for (int i = 0; i < ssp->zones; i++) {
-		t += reward(&(ssp->sz), &(ssp->dzs[i]));
+	if (str[newLine] == '\t') {
+		errStr[0] = '\t';
+		tab = 1;
 	}
-	return t;
-}
-
-/**
- * Calculate the reward for an SZ with respect to a specific DZ
- */
-float reward(ServiceZone *sz, DemandZone *dz) {
-	float w = fmin(sz->x + sz->w, dz->x + dz->w) - fmax(sz->x, dz->x);
-	float h = fmin(sz->y + sz->h, dz->y + dz->h) - fmax(sz->y, dz->y);
-	if (!floatpos(w) || !floatpos(h)) {
-		return 0;
+	// Fill with spaces
+	if (errPos > 0) {
+		memset(&errStr[tab], ' ', errPos - tab);
 	}
-	return dz->v * w * h;
+	errStr[errPos] = '^';
 }
 
-/**
- * Calculate the solution to a given SSP.  The SZ of the SSP input will be
- * modified so that its coordinates are the optimal coordinates.  Returns the
- * total reward of the SZ
- */
-float solvessp(SSP *ssp) {
-	ServiceZone *sz = &(ssp->sz);
-	PointList *yis = newpl(), *l = newpl();
-	IndexMap *ix = newim(), *ox = newim();
-	setup(ssp, yis, l, ix, ox);
-	float c = 0, y, phi, m, lk, ws = ssp->sz.w, xs, ys;
-	PointListNode *ycur = *yis, *xcur = NULL;
-	IndexList oind, iind;
-	while (ycur != NULL) {
-		y = ycur->value;
-		sz->y = y;
-		phi = 0;
-		m = 0;
-		xcur = *l;
-		while (xcur->next != NULL) {
-			lk = xcur->value;
-			oind = evaluate(ox, lk);
-			while (oind != NULL) {
-				sz->x = ssp->dzs[oind->value].x;
-				m += reward(sz, &(ssp->dzs[oind->value])) / ws;
-				oind = oind->next;
-			}
-			iind = evaluate(ix, lk);
-			while (iind != NULL) {
-				sz->x = ssp->dzs[iind->value].x;
-				m -= reward(sz, &(ssp->dzs[iind->value])) / ws;
-				iind = iind->next;
-			}
-			phi += m * (xcur->next->value - lk);
-			// printf("(%.3f, %.3f): %.3f\n", xcur->next->value, y, phi);
-			if (c < phi) {
-				c = phi;
-				xs = xcur->next->value;
-				ys = y;
-			}
-			xcur = xcur->next;
+void makeLineString(char *line, const char *str) {
+	memset(line, '\0', 50);
+	int maxLen = 0, length = 0, i = 0;
+	char c;
+	while (i < strlen(str)) {
+		c = str[i];
+		if (c == '\t') {
+			length += TAB_LEN;
 		}
-		ycur = ycur->next;
+		else if (c == '\n') {
+			length = 0;
+		}
+		else {
+			length += 1;
+		}
+		if (length > maxLen) {
+			maxLen = length;
+		}
+		i += 1;
 	}
-	sz->x = xs;
-	sz->y = ys;
-	plfree(yis);
-	plfree(l);
-	imfree(ix);
-	imfree(ox);
-	return totalreward(ssp);
+	i = 0;
+	while (i < maxLen) {
+		line[i] = '-';
+		i += 1;
+	}
+}
+
+char nextChar(FILE *fp) {
+	char c = getc(fp);
+	ungetc(c, fp);
+	return c;
+}
+
+void readVar(FILE *fp, char varName, float *loc, int *curLine, char *str, char *errStr) {
+	int pos = nextLine(fp, str);
+	char fStr[50], line1[50], line2[50];
+	memset(fStr, '\0', 50);
+	snprintf(fStr, 9, "\n\t%c = %%f", varName);
+	if (fscanf(fp, fStr, loc) != 1 || nextChar(fp) != '\n') {
+		pos = ftell(fp) - pos;
+		makeErrorString(errStr, str, pos - 2);
+		makeLineString(line1, str);
+		makeLineString(line2, errStr);
+		fprintf(stderr, "Unexpected Input (line %d):\n%s\n%s\n%s\n%s\nExpected:\n%s\n%s\n%s\n", *curLine, line1, str, errStr, line1, line2, fStr, line2);
+		exit(-1);
+	}
+	*curLine += 1;
+}
+
+void readText(FILE *fp, const char *text, int *curLine) {
+	int i = 0, len = strlen(text);
+	char c = 0;
+	char line1[50], line2[50], str[50];
+	memset(str, '\0', 50);
+	fread(str, sizeof(char), len, fp);
+	while (i < len) {
+		if (str[i] != text[i]) {
+			makeLineString(line1, str);
+			makeLineString(line2, text);
+			fprintf(stderr, "Unexpected input (line %d):\n%s\n%s\n%s\nExpected:\n%s\n%s\n%s\n", curLine, line1, str, line1, line2, text, line2);
+			exit(-1);
+		}
+		else if (str[i] == '\n') {
+			*curLine += 1;
+		}
+		i += 1;
+	}
+}
+
+/**
+ * Rough function for reading input file.  Not the most secure, but gets the
+ * job done.
+ */
+
+void readssp(SSP *ssp, FILE *fp) {
+	int pos = 0, zones = 0, curLine = 0;
+	char c = 0;
+	char str[50], errStr[50], line1[50], line2[50];
+	memset(str, '\0', 50);
+	memset(errStr, '\0', 50);
+	readText(fp, "SZ {", &curLine);
+	readVar(fp, 'w', &(ssp->sz.w), &curLine, str, errStr);
+	readVar(fp, 'h', &(ssp->sz.h), &curLine, str, errStr);
+	readText(fp, "\n}", &curLine);
+	// Get the file position immediately after the SZ
+	pos = ftell(fp);
+	// Get the number of lines containing the DZs
+	c = getc(fp);
+	while (!feof(fp)) {
+		if (c == 'D' && getc(fp) == 'Z') {
+			zones += 1;
+		}
+		c = getc(fp);
+	}
+	ssp->zones = zones;
+	makedzs(ssp, zones);
+	fseek(fp, pos, SEEK_SET);
+	for (int i = 0; i < zones; i++) {
+		pos = ftell(fp);
+		readText(fp, "\n\nDZ {", &curLine);
+		readVar(fp, 'x', &(ssp->dzs[i].x), &curLine, str, errStr);
+		readVar(fp, 'y', &(ssp->dzs[i].y), &curLine, str, errStr);
+		readVar(fp, 'w', &(ssp->dzs[i].w), &curLine, str, errStr);
+		readVar(fp, 'h', &(ssp->dzs[i].h), &curLine, str, errStr);
+		readVar(fp, 'v', &(ssp->dzs[i].v), &curLine, str, errStr);
+		readText(fp, "\n}", &curLine);
+	}
+}
+
+void main(int argc, char* argv[]) {
+	const char* filename = argv[1];
+	SSP *ssp = newssp();
+	FILE *fp = fopen(filename, "r");
+	if (fp == NULL) {
+		fprintf(stderr, "Could not find/open file: %s\nMake sure file is accessible and is not being used by another program\n", filename);
+	}
+	readssp(ssp, fp);
+	float reward = solvessp(ssp);
+	printSZ(&(ssp->sz));
+	printf("Optimal Reward: %f\n", reward);
+	fclose(fp);
 }
