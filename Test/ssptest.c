@@ -30,7 +30,8 @@ void test1() {
 		exit(-1);
 	}
 	if (!floatequals(total, 162.0)) {
-		printf("Failed\nExpected SSP optimal reward to be (%.2f), but was (%.2f)\n", 162.0, total);
+		printf("Failed\nExpected SSP optimal reward to be (%.2f), but was"
+			"(%.2f)\n", 162.0, total);
 		exit(-1);
 	}
 	sspfree(ssp);
