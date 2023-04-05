@@ -1,3 +1,3 @@
 @echo off
-gcc ssptest.c "..\ssp.c" "..\structures.c" -o ssptest.exe
+gcc ssptest.c "..\src\ssp.c" "..\src\structures.c" -o ssptest.exe
 ssptest.exe

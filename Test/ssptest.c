@@ -1,5 +1,5 @@
 #ifndef SSP_H
-#include "..\ssp.h"
+#include "..\src\ssp.h"
 #endif
 
 void printSSP(SSP *ssp) {

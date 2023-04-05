@@ -1,6 +1,6 @@
 @echo off
 cd Coverage
-gcc --coverage "..\main.c" "..\ssp.c" "..\structures.c" -c
+gcc --coverage "..\src\main.c" "..\src\ssp.c" "..\src\structures.c" -c
 gcc --coverage main.o ssp.o structures.o -o sspcoverage.exe
 sspcoverage.exe "..\input.txt"
 gcov main.o ssp.o structures.o -m

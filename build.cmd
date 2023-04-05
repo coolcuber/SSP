@@ -1,2 +1,2 @@
 @echo off
-gcc ssp.c structures.c main.c -o ssp.exe
+gcc "src\ssp.c" "src\structures.c" "src\main.c" -o ssp.exe

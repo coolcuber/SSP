@@ -1,6 +1,10 @@
 Written by coolcuber
 Uploaded 04.03.2023 (Using the correct [or American] dating system)
 
+To create the file (on windows), simply run build.cmd
+This will create ssp.exe, which should be invoked as follows:
+C:\> ssp [filename]
+
 The input file formatting is very strict (the program focuses on the problem,
 so input handling is kind of wacky).  Here are a few specific requirements:
 - Tabs instead of spaces
