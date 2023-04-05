@@ -7,6 +7,8 @@ C:\> ssp [filename]
 
 The input file formatting is very strict (the program focuses on the problem,
 so input handling is kind of wacky).  Here are a few specific requirements:
+- Ensure that the file is encoded using CRLF (default Windows encoding) and not
+  LF (default Unix encoding)
 - Tabs instead of spaces
 - Exactly 1 newline between Zone parameters
 - Exactly 3 newlines between Zone descriptions
