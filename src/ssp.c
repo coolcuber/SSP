@@ -43,12 +43,20 @@ void printdz(DemandZone *dz) {
 	printf("DZ: x = %f, y = %f, w = %f, h = %f, v = %f\n", dz->x, dz->y, dz->w, dz->h, dz->v);
 }
 
+void printSSP(SSP *ssp) {
+	printsz(&(ssp->sz));
+	printf("Size: %d\n", ssp->zones);
+	for (int i = 0; i < ssp->zones; i++) {
+		printdz(&(ssp->dzs[i]));
+	}
+}
+
 /**
  * Print an SZ to stdout
  */
 void printsz(ServiceZone *sz) {
 	printf("SZ: x = %f, y = %f, w = %f, h = %f\n", sz->x, sz->y, sz->w, sz->h);
-}	
+}
 
 /**
  * Calculate the reward for an SZ with respect to a specific DZ

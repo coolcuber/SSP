@@ -2,14 +2,6 @@
 #include "..\src\ssp.h"
 #endif
 
-void printSSP(SSP *ssp) {
-	printsz(&(ssp->sz));
-	printf("Size: %d\n", ssp->zones);
-	for (int i = 0; i < ssp->zones; i++) {
-		printdz(&(ssp->dzs[i]));
-	}
-}
-
 void test1() {
 	printf("Test 1: ");
 	ServiceZone sz = (ServiceZone) {3, 7, 4, 3};
@@ -35,7 +27,7 @@ void test1() {
 		exit(-1);
 	}
 	sspfree(ssp);
-	printf("Succeeded\n");
+	printf("Success\n");
 }
 
 void main() {
