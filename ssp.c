@@ -20,16 +20,11 @@ int floatpos(float f) {
 }
 
 /**
- * Returns a pointer to a new DZ with specified properties
+ * Initialize the dynamic array of DZs in the SSP
  */
-DemandZone* newdz(float x, float y, float w, float h, float v) {
-	DemandZone *dz = (DemandZone*) malloc(sizeof(DemandZone));
-	dz->x = x;
-	dz->y = y;
-	dz->w = w;
-	dz->h = h;
-	dz->v = v;
-	return dz;
+void makedzs(SSP *ssp, size_t size) {
+	ssp->zones = size;
+	ssp->dzs = (DemandZone*) calloc(size, sizeof(DemandZone));
 }
 
 /**
@@ -41,38 +36,30 @@ SSP* newssp() {
 }
 
 /**
- * Initialize the dynamic array of DZs in the SSP
+ * Print a DZ to stdout
+ * Not used in current implementation, but could be useful
  */
-void makedzs(SSP *ssp, size_t size) {
-	ssp->zones = size;
-	ssp->dzs = (DemandZone*) calloc(size, sizeof(DemandZone));
+void printdz(DemandZone *dz) {
+	printf("DZ: x = %f, y = %f, w = %f, h = %f, v = %f\n", dz->x, dz->y, dz->w, dz->h, dz->v);
 }
 
 /**
- * Deallocate an SSP and the associated list of DZs
+ * Print an SZ to stdout
  */
-void sspfree(SSP *ssp) {
-	free(ssp->dzs);
-	free(ssp);
-}
+void printsz(ServiceZone *sz) {
+	printf("SZ: x = %f, y = %f, w = %f, h = %f\n", sz->x, sz->y, sz->w, sz->h);
+}	
 
 /**
- * Returns a pointer to a new SZ with specified properties
+ * Calculate the reward for an SZ with respect to a specific DZ
  */
-ServiceZone* newsz(float x, float y, float w, float h) {
-	ServiceZone *sz = (ServiceZone*) malloc(sizeof(ServiceZone));
-	sz->x = x;
-	sz->y = y;
-	sz->w = w;
-	sz->h = h;
-	return sz;
-}
-
-/**
- * Check that two SZs are equivalent
- */
-int szequals(ServiceZone *sz1, ServiceZone *sz2) {
-	return floatequals(sz1->x, sz2->x) && floatequals(sz1->y, sz2->y) && floatequals(sz1->w, sz2->w) && floatequals(sz1->h, sz2->h);
+float reward(ServiceZone *sz, DemandZone *dz) {
+	float w = fmin(sz->x + sz->w, dz->x + dz->w) - fmax(sz->x, dz->x);
+	float h = fmin(sz->y + sz->h, dz->y + dz->h) - fmax(sz->y, dz->y);
+	if (!floatpos(w) || !floatpos(h)) {
+		return 0;
+	}
+	return dz->v * w * h;
 }
 
 /**
@@ -107,30 +94,7 @@ void setup(SSP *ssp, PointList *yi, PointList *l, IndexMap *ix, IndexMap *ox) {
 }
 
 /**
- * Calculate the total reward recieved by the SZ in a given SSP
- */
-float totalreward(SSP *ssp) {
-	float t = 0;
-	for (int i = 0; i < ssp->zones; i++) {
-		t += reward(&(ssp->sz), &(ssp->dzs[i]));
-	}
-	return t;
-}
-
-/**
- * Calculate the reward for an SZ with respect to a specific DZ
- */
-float reward(ServiceZone *sz, DemandZone *dz) {
-	float w = fmin(sz->x + sz->w, dz->x + dz->w) - fmax(sz->x, dz->x);
-	float h = fmin(sz->y + sz->h, dz->y + dz->h) - fmax(sz->y, dz->y);
-	if (!floatpos(w) || !floatpos(h)) {
-		return 0;
-	}
-	return dz->v * w * h;
-}
-
-/**
- * Calculate the solution to a given SSP.  The SZ of the SSP input will be
+ * Calculate the solution to a given SSP.  The SZ of the SSP input wil be
  * modified so that its coordinates are the optimal coordinates.  Returns the
  * total reward of the SZ
  */
@@ -180,4 +144,30 @@ float solvessp(SSP *ssp) {
 	imfree(ix);
 	imfree(ox);
 	return totalreward(ssp);
+}
+
+/**
+ * Deallocate an SSP and the associated list of DZs
+ */
+void sspfree(SSP *ssp) {
+	free(ssp->dzs);
+	free(ssp);
+}
+
+/**
+ * Check that two SZs are equivalent
+ */
+int szequals(ServiceZone *sz1, ServiceZone *sz2) {
+	return floatequals(sz1->x, sz2->x) && floatequals(sz1->y, sz2->y) && floatequals(sz1->w, sz2->w) && floatequals(sz1->h, sz2->h);
+}
+
+/**
+ * Calculate the total reward recieved by the SZ in a given SSP
+ */
+float totalreward(SSP *ssp) {
+	float t = 0;
+	for (int i = 0; i < ssp->zones; i++) {
+		t += reward(&(ssp->sz), &(ssp->dzs[i]));
+	}
+	return t;
 }

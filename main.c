@@ -4,14 +4,6 @@
 
 #define TAB_LEN 8
 
-void printDZ(DemandZone *dz) {
-	printf("DZ: x = %f, y = %f, w = %f, h = %f, v = %f\n", dz->x, dz->y, dz->w, dz->h, dz->v);
-}
-
-void printSZ(ServiceZone *sz) {
-	printf("SZ: x = %f, y = %f, w = %f, h = %f\n", sz->x, sz->y, sz->w, sz->h);
-}
-
 /**
  *
  * Internal functions for file reading.
@@ -54,7 +46,7 @@ void makeErrorString(char *errStr, char *str, int errPos) {
 		errStr[0] = '\t';
 		tab = 1;
 	}
-	// Fill with spaces
+	// Fil with spaces
 	if (errPos > 0) {
 		memset(&errStr[tab], ' ', errPos - tab);
 	}
@@ -179,7 +171,8 @@ void main(int argc, char* argv[]) {
 	}
 	readssp(ssp, fp);
 	float reward = solvessp(ssp);
-	printSZ(&(ssp->sz));
+	printsz(&(ssp->sz));
 	printf("Optimal Reward: %f\n", reward);
 	fclose(fp);
+	free(ssp);
 }

@@ -1,0 +1,180 @@
+        -:    0:Source:../main.c
+        -:    0:Programs:3
+        -:    1:#ifndef SSP_H
+        -:    2:#include "ssp.h"
+        -:    3:#endif
+        -:    4:
+        -:    5:#define TAB_LEN 8
+        -:    6:
+        -:    7:/**
+        -:    8: *
+        -:    9: * Internal functions for file reading.
+        -:   10: * These are trown together without regard for security, so don't use these in
+        -:   11: * an application!
+        -:   12: *
+        -:   13: */
+        -:   14:
+        -:   15:/**
+        -:   16: * Get the next line in a file without moving the filestream position.
+        -:   17: * Returns a string of the characters until either the first newline
+        -:   18: * (not including the first character) or EOF is reached.
+        -:   19: */
+       27:   20:int nextLine(FILE *fp, char *str) {
+       27:   21:	memset(str, '\0', 50);
+       27:   22:	int pos = ftell(fp), i = 0;
+       27:   23:	char c = fgetc(fp);
+        -:   24:	do {
+      191:   25:		str[i] = c;
+      191:   26:		c = fgetc(fp);
+      191:   27:		i += 1;
+      191:   28:	} while (c != '\n' && i < 50);
+       27:   29:	fseek(fp, pos, SEEK_SET);
+       27:   30:	return pos;
+        -:   31:}
+        -:   32:
+        -:   33:/**
+        -:   34: * Create the string indicating the position of the error. Assumes errStr
+        -:   35: * is blank.
+        -:   36: */
+    #####:   37:void makeErrorString(char *errStr, char *str, int errPos) {
+    #####:   38:	int newLine = 0, tab = 0;
+    #####:   39:	if (errPos >= 50) {
+    #####:   40:		exit(-1);
+        -:   41:	}
+    #####:   42:	if (str[0] == '\n') {
+    #####:   43:		newLine = 1;
+        -:   44:	}
+    #####:   45:	if (str[newLine] == '\t') {
+    #####:   46:		errStr[0] = '\t';
+    #####:   47:		tab = 1;
+        -:   48:	}
+        -:   49:	// Fill with spaces
+    #####:   50:	if (errPos > 0) {
+    #####:   51:		memset(&errStr[tab], ' ', errPos - tab);
+        -:   52:	}
+    #####:   53:	errStr[errPos] = '^';
+    #####:   54:}
+        -:   55:
+    #####:   56:void makeLineString(char *line, const char *str) {
+    #####:   57:	memset(line, '\0', 50);
+    #####:   58:	int maxLen = 0, length = 0, i = 0;
+        -:   59:	char c;
+    #####:   60:	while (i < strlen(str)) {
+    #####:   61:		c = str[i];
+    #####:   62:		if (c == '\t') {
+    #####:   63:			length += TAB_LEN;
+        -:   64:		}
+    #####:   65:		else if (c == '\n') {
+    #####:   66:			length = 0;
+        -:   67:		}
+        -:   68:		else {
+    #####:   69:			length += 1;
+        -:   70:		}
+    #####:   71:		if (length > maxLen) {
+    #####:   72:			maxLen = length;
+        -:   73:		}
+    #####:   74:		i += 1;
+        -:   75:	}
+    #####:   76:	i = 0;
+    #####:   77:	while (i < maxLen) {
+    #####:   78:		line[i] = '-';
+    #####:   79:		i += 1;
+        -:   80:	}
+    #####:   81:}
+        -:   82:
+       27:   83:char nextChar(FILE *fp) {
+       27:   84:	char c = getc(fp);
+       27:   85:	ungetc(c, fp);
+       27:   86:	return c;
+        -:   87:}
+        -:   88:
+       27:   89:void readVar(FILE *fp, char varName, float *loc, int *curLine, char *str, char *errStr) {
+       27:   90:	int pos = nextLine(fp, str);
+        -:   91:	char fStr[50], line1[50], line2[50];
+       27:   92:	memset(fStr, '\0', 50);
+       27:   93:	snprintf(fStr, 9, "\n\t%c = %%f", varName);
+       27:   94:	if (fscanf(fp, fStr, loc) != 1 || nextChar(fp) != '\n') {
+    #####:   95:		pos = ftell(fp) - pos;
+    #####:   96:		makeErrorString(errStr, str, pos - 2);
+    #####:   97:		makeLineString(line1, str);
+    #####:   98:		makeLineString(line2, errStr);
+    #####:   99:		fprintf(stderr, "Unexpected Input (line %d):\n%s\n%s\n%s\n%s\nExpected:\n%s\n%s\n%s\n", *curLine, line1, str, errStr, line1, line2, fStr, line2);
+    #####:  100:		exit(-1);
+        -:  101:	}
+       27:  102:	*curLine += 1;
+       27:  103:}
+        -:  104:
+       12:  105:void readText(FILE *fp, const char *text, int *curLine) {
+       12:  106:	int i = 0, len = strlen(text);
+       12:  107:	char c = 0;
+        -:  108:	char line1[50], line2[50], str[50];
+       12:  109:	memset(str, '\0', 50);
+       12:  110:	fread(str, sizeof(char), len, fp);
+       70:  111:	while (i < len) {
+       46:  112:		if (str[i] != text[i]) {
+    #####:  113:			makeLineString(line1, str);
+    #####:  114:			makeLineString(line2, text);
+    #####:  115:			fprintf(stderr, "Unexpected input (line %d):\n%s\n%s\n%s\nExpected:\n%s\n%s\n%s\n", curLine, line1, str, line1, line2, text, line2);
+    #####:  116:			exit(-1);
+        -:  117:		}
+       46:  118:		else if (str[i] == '\n') {
+       16:  119:			*curLine += 1;
+        -:  120:		}
+       46:  121:		i += 1;
+        -:  122:	}
+       12:  123:}
+        -:  124:
+        -:  125:/**
+        -:  126: * Rough function for reading input file.  Not the most secure, but gets the
+        -:  127: * job done.
+        -:  128: */
+        -:  129:
+        1:  130:void readssp(SSP *ssp, FILE *fp) {
+        1:  131:	int pos = 0, zones = 0, curLine = 0;
+        1:  132:	char c = 0;
+        -:  133:	char str[50], errStr[50], line1[50], line2[50];
+        1:  134:	memset(str, '\0', 50);
+        1:  135:	memset(errStr, '\0', 50);
+        1:  136:	readText(fp, "SZ {", &curLine);
+        1:  137:	readVar(fp, 'w', &(ssp->sz.w), &curLine, str, errStr);
+        1:  138:	readVar(fp, 'h', &(ssp->sz.h), &curLine, str, errStr);
+        1:  139:	readText(fp, "\n}", &curLine);
+        -:  140:	// Get the file position immediately after the SZ
+        1:  141:	pos = ftell(fp);
+        -:  142:	// Get the number of lines containing the DZs
+        1:  143:	c = getc(fp);
+      214:  144:	while (!feof(fp)) {
+      212:  145:		if (c == 'D' && getc(fp) == 'Z') {
+        5:  146:			zones += 1;
+        -:  147:		}
+      212:  148:		c = getc(fp);
+        -:  149:	}
+        1:  150:	ssp->zones = zones;
+        1:  151:	makedzs(ssp, zones);
+        1:  152:	fseek(fp, pos, SEEK_SET);
+        6:  153:	for (int i = 0; i < zones; i++) {
+        5:  154:		pos = ftell(fp);
+        5:  155:		readText(fp, "\n\nDZ {", &curLine);
+        5:  156:		readVar(fp, 'x', &(ssp->dzs[i].x), &curLine, str, errStr);
+        5:  157:		readVar(fp, 'y', &(ssp->dzs[i].y), &curLine, str, errStr);
+        5:  158:		readVar(fp, 'w', &(ssp->dzs[i].w), &curLine, str, errStr);
+        5:  159:		readVar(fp, 'h', &(ssp->dzs[i].h), &curLine, str, errStr);
+        5:  160:		readVar(fp, 'v', &(ssp->dzs[i].v), &curLine, str, errStr);
+        5:  161:		readText(fp, "\n}", &curLine);
+        -:  162:	}
+        1:  163:}
+        -:  164:
+        1:  165:void main(int argc, char* argv[]) {
+        1:  166:	const char* filename = argv[1];
+        1:  167:	SSP *ssp = newssp();
+        1:  168:	FILE *fp = fopen(filename, "r");
+        1:  169:	if (fp == NULL) {
+    #####:  170:		fprintf(stderr, "Could not find/open file: %s\nMake sure file is accessible and is not being used by another program\n", filename);
+        -:  171:	}
+        1:  172:	readssp(ssp, fp);
+        1:  173:	float reward = solvessp(ssp);
+        1:  174:	printsz(&(ssp->sz));
+        1:  175:	printf("Optimal Reward: %f\n", reward);
+        1:  176:	fclose(fp);
+        1:  177:	free(ssp);
+        1:  178:}

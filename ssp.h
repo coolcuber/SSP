@@ -50,16 +50,17 @@ struct SSP {
 };
 
 int floatequals(float f1, float f2);
-DemandZone* newdz(float x, float y, float w, float h, float v);
-SSP* newssp();
+int floatpos(float f);
 void makedzs(SSP *ssp, size_t size);
-void sspfree(SSP *ssp);
-ServiceZone* newsz(float x, float y, float w, float h);
-int szequals(ServiceZone *sz1, ServiceZone *sz2);
-void setup(SSP *ssp, PointList *yi, PointList *l, IndexMap *ix, IndexMap *ox);
-float reward(ServiceZone *sz, DemandZone *dz);
-float totalreward(SSP *ssp);
-float solvessp(SSP *ssp);
+SSP* newssp();
+void printdz(DemandZone *dz);
+void printsz(ServiceZone *sz);
 void readssp(SSP *ssp, FILE *fp);
+float reward(ServiceZone *sz, DemandZone *dz);
+void setup(SSP *ssp, PointList *yi, PointList *l, IndexMap *ix, IndexMap *ox);
+float solvessp(SSP *ssp);
+void sspfree(SSP *ssp);
+int szequals(ServiceZone *sz1, ServiceZone *sz2);
+float totalreward(SSP *ssp);
 
 #endif

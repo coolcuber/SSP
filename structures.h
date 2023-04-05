@@ -43,16 +43,16 @@ struct PointListNode {
 	PointListNode *next;
 };
 
-IndexListNode* iladd(IndexList *ill, int value);
+IndexListNode* iladd(IndexList *il, int value);
 IndexMapping* imadd(IndexMap *map, float point, int ind);
 PointListNode* pladd(PointList *pll, float value);
 IndexMap* newim();
 PointList* newpl();
 IndexList evaluate(IndexMap *map, float in);
-void ilfree(IndexList *ill);
+void ilfree(IndexList *il);
 void imfree(IndexMap *map);
 void plfree(PointList *pll);
 IndexList* newil(int value);
-IndexListNode* newILN(int value);
-PointList* newPLL(float value);
-PointListNode* newPLN(float value);
+IndexListNode* newiln(int value);
+IndexMapping* newIndexMapping(float point, int ind);
+PointListNode* newpln(float value);
