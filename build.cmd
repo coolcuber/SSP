@@ -1,6 +1,4 @@
 @echo off
-cd test
-cmd /C "test"
-cd ..
+cmd /C "test\test"
 gcc "src\ssp.c" "src\structures.c" "src\main.c" -o ssp.exe
 echo Build complete
