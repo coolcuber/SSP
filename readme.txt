@@ -1,6 +1,9 @@
 Written by coolcuber
 Uploaded 04.03.2023 (Using the correct [or American] dating system)
 
+Algorithm Created by Dr. Manish Bansal and Dr. Kiavish Kianfar
+https://web.archive.org/web/20170829211431id_/http://www.optimization-online.org/DB_FILE/2014/10/4573.pdf
+
 To create the file (on windows), simply run build.cmd
 This will create ssp.exe, which should be invoked as follows:
 C:\> ssp [filename]
